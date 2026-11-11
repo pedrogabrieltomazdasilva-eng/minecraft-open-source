@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.MinecraftOpenServer" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:colorAccent">#3DE59B</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#090D0B</item>
+        <item name="android:navigationBarColor">#090D0B</item>
+        <item name="android:windowBackground">#090D0B</item>
+        <item name="android:fontFamily">sans</item>
+    </style>
+</resources>

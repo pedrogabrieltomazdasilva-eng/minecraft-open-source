@@ -1,0 +1,34 @@
+diff --git a/src/hotspot/os/linux/os_linux.cpp b/src/hotspot/os/linux/os_linux.cpp
+--- a/src/hotspot/os/linux/os_linux.cpp
++++ b/src/hotspot/os/linux/os_linux.cpp
+@@ -3271,1 +3271,11 @@
+-    Arguments::set_dll_dir(buf);
++    // The Android package manager installs executable libraries outside the
++    // private JRE data tree. Use that read-only location for native loading.
++    const char* openmc_native_dir = ::getenv("OPENMC_NATIVE_DIR");
++    if (openmc_native_dir != nullptr) {
++      struct stat native_stat;
++      if (openmc_native_dir[0] != '/' || ::stat(openmc_native_dir, &native_stat) != 0 ||
++          !S_ISDIR(native_stat.st_mode)) {
++        vm_exit_during_initialization("Invalid OPENMC_NATIVE_DIR", nullptr);
++      }
++    }
++    Arguments::set_dll_dir(openmc_native_dir != nullptr ? openmc_native_dir : buf);
+@@ -3289,1 +3299,16 @@
+-    Arguments::set_java_home(buf);
++    // Android app data may contain modules but not executable native code.
++    // The launcher supplies this explicit data root before boot path setup.
++    const char* openmc_runtime_home = ::getenv("OPENMC_RUNTIME_HOME");
++    if (openmc_runtime_home != nullptr) {
++      char modules_path[MAXPATHLEN];
++      struct stat modules_stat;
++      int length = jio_snprintf(modules_path, sizeof(modules_path),
++                                "%s/lib/modules", openmc_runtime_home);
++      if (openmc_runtime_home[0] != '/' || length < 0 ||
++          static_cast<size_t>(length) >= sizeof(modules_path) ||
++          ::stat(modules_path, &modules_stat) != 0 ||
++          !S_ISREG(modules_stat.st_mode)) {
++        vm_exit_during_initialization("Invalid OPENMC_RUNTIME_HOME: lib/modules missing", nullptr);
++      }
++    }
++    Arguments::set_java_home(openmc_runtime_home != nullptr ? openmc_runtime_home : buf);
